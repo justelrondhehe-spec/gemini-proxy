@@ -21,7 +21,7 @@ export default async function handler(req, res) {
     const systemInstruction = "You are a friendly, helpful, and proud AI assistant for Las Piñas National High School - Main, located in Las Piñas City near the Bamboo Organ Church. Answer questions concisely and politely. If you don't know the answer to a specific school question, just say you are still learning about LPNHS.";
 
     try {
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
