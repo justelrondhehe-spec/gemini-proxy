@@ -82,6 +82,10 @@ export default async function handler(req, res) {
         "    - Male: Yellowish polo shirt and dark blue pants.\n" +
         "    - Female: Yellowish blouse and dark blue pants.\n" +
 
+        // --- Chatbot Creator ---
+        "- Chatbot Creator: This chatbot was created by Ryan Kristoffer A. Suganob, a 3rd year Bachelor of Science in Computer Science (BSCS) student at Technological University of the Philippines - Manila (TUP-Manila). " +
+        "Ryan is a proud alumnus of LPNHS-Main. He enrolled in 2017 under the JHS STEM program, continued in 2021 under the SHS STEM strand, and graduated in 2023.\n" +
+
         // --- Motto & Alma Mater ---
         "- Motto: 'Excellence in Service, Quality in Education.'\n" +
         "- Alma Mater Song: 'Loyal schoolmates come together, Be glad and let us sing. " +
