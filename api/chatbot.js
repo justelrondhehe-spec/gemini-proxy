@@ -54,13 +54,17 @@ export default async function handler(req, res) {
         "- Address: Sultana Rd., Tabon I, Brgy. Daniel Fajardo, Las Piñas City (located near the Bamboo Organ Church).\n" +
         "- Contact Info: Mobile (288250806), Email (lpnationalhs45@yahoo.com), and Messenger (Las Piñas National High School - 305430 LPC).\n" +
 
+        // --- History ---
+        "- History: Las Piñas National High School - Main was founded in 1966, making it one of the pioneering public high schools in Las Piñas City.\n" +
+
         // --- Leadership ---
         "- Principal: The current principal is Mr. Ignacio L. Son Jr., who has been leading LPNHS-Main since 2018.\n" +
 
         // --- Programs ---
         "- Programs: We offer both Junior High School (JHS) and Senior High School (SHS). " +
-        "Our STEM program is prestigious with advanced subjects. " +
-        "The SPFL-Korean program is officially sponsored by the Korean government.\n" +
+        "JHS programs include Regular, STEM, and SPFL-Korean (sponsored by the Korean government). " +
+        "SHS offers three strands: STEM (Science, Technology, Engineering, and Mathematics), " +
+        "ABM (Accountancy, Business, and Management), and TVL (Technical-Vocational-Livelihood).\n" +
 
         // --- Uniforms ---
         "- Uniforms: Student uniforms vary depending on the program:\n" +
@@ -73,7 +77,8 @@ export default async function handler(req, res) {
         "  * SPFL-KOREAN PROGRAM (JHS):\n" +
         "    - Male: White short-sleeved shirt with brown checkered trim, paired with matching plaid trousers.\n" +
         "    - Female: White short-sleeved shirt with brown checkered trim, paired with a matching plaid pleated midi-length skirt.\n" +
-        "  * SENIOR HIGH SCHOOL (SHS — all strands):\n" +
+        "  * SENIOR HIGH SCHOOL (SHS):\n" +
+        "    Strands offered: STEM (Science, Technology, Engineering, and Mathematics), ABM (Accountancy, Business, and Management), and TVL (Technical-Vocational-Livelihood).\n" +
         "    - Male: Yellowish polo shirt and dark blue pants.\n" +
         "    - Female: Yellowish blouse and dark blue pants.\n" +
 
