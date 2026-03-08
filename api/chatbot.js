@@ -158,7 +158,58 @@ export default async function handler(req, res) {
     messages.push({ role: "user", content: message });
 
     // =========================================================
-    // 6. CALL GROQ API WITH RETRY LOGIC
+    // 6. PER-USER RATE LIMITING
+    //
+    //    Tracks how many requests each user (identified by IP)
+    //    has made within the current 60-second window.
+    //    Limit: 5 messages per minute per user.
+    //
+    //    We use a simple in-memory Map on the Vercel serverless
+    //    function. Each entry stores:
+    //      { count: number, windowStart: timestamp }
+    //
+    //    When a user hits the limit, we return the number of
+    //    seconds remaining so the frontend can show a countdown.
+    // =========================================================
+
+    const RATE_LIMIT = 5;           // Max messages per window
+    const WINDOW_MS  = 60 * 1000;   // 60-second window
+
+    // In-memory store — persists across requests within the same
+    // serverless function instance (resets on cold start, which
+    // is fine for our use case).
+    if (!global.rateLimitStore) {
+        global.rateLimitStore = new Map();
+    }
+
+    // Identify the user by their IP address
+    const userIP = req.headers['x-forwarded-for']?.split(',')[0].trim()
+                   || req.socket?.remoteAddress
+                   || 'unknown';
+
+    const now        = Date.now();
+    const userRecord = global.rateLimitStore.get(userIP);
+
+    if (userRecord && (now - userRecord.windowStart) < WINDOW_MS) {
+        // Still within the current window
+        if (userRecord.count >= RATE_LIMIT) {
+            // User has hit the limit — calculate seconds remaining
+            const secondsLeft = Math.ceil((WINDOW_MS - (now - userRecord.windowStart)) / 1000);
+            return res.status(429).json({
+                reply:      null,
+                rateLimited: true,
+                secondsLeft  // Frontend uses this to show the countdown
+            });
+        }
+        // Still under the limit — increment count
+        userRecord.count++;
+    } else {
+        // New window — reset the counter for this user
+        global.rateLimitStore.set(userIP, { count: 1, windowStart: now });
+    }
+
+    // =========================================================
+    // 7. CALL GROQ API WITH RETRY LOGIC
     //
     //    Groq's free tier is generous but can still return 429s
     //    during traffic spikes. We retry up to 3 times with a
