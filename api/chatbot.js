@@ -162,33 +162,82 @@ export default async function handler(req, res) {
     });
 
     // =========================================================
-    // 6. CALL GEMINI API & RETURN REPLY
+    // 6. CALL GEMINI API WITH RETRY LOGIC
+    //
+    //    If Google returns a 429 (quota exceeded) error, we
+    //    automatically wait and retry up to MAX_RETRIES times
+    //    before giving up and returning a friendly message.
+    //    This handles traffic spikes when multiple users hit
+    //    the chatbot at the same time.
     // =========================================================
-    try {
+
+    const MAX_RETRIES = 3;       // Maximum number of retry attempts
+    const RETRY_DELAY_MS = 5000; // Wait 5 seconds between each retry
+
+    /**
+     * Pauses execution for the given number of milliseconds.
+     * Used between retry attempts.
+     * @param {number} ms
+     */
+    const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+    /**
+     * Calls the Gemini API and returns the parsed JSON response.
+     * Does not handle quota errors itself — that's done in the
+     * retry loop below.
+     */
+    const callGemini = async () => {
         const response = await fetch(
             `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
             {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                // Send the full multi-turn contents array
                 body: JSON.stringify({ contents })
             }
         );
+        return response.json();
+    };
 
-        const data = await response.json();
+    // Retry loop — attempts the API call up to MAX_RETRIES times
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+        try {
+            const data = await callGemini();
 
-        // Catch errors returned by Google's API (e.g. invalid key, quota exceeded)
-        if (data.error) {
-            console.error("Google rejected the request:", data.error.message);
-            return res.status(500).json({ reply: `Google Error: ${data.error.message}` });
+            // Check if Google returned an API-level error (e.g. quota, bad key)
+            if (data.error) {
+                const isQuotaError = data.error.status === 'RESOURCE_EXHAUSTED';
+
+                if (isQuotaError && attempt < MAX_RETRIES) {
+                    // Quota hit — log it, wait, then try again
+                    console.warn(`[LPNHS Chat] Quota exceeded. Retry ${attempt}/${MAX_RETRIES} in ${RETRY_DELAY_MS}ms...`);
+                    await wait(RETRY_DELAY_MS);
+                    continue; // Jump to next iteration of the retry loop
+                }
+
+                // Either not a quota error, or we've exhausted all retries
+                console.error("Google API error:", data.error.message);
+                return res.status(500).json({
+                    reply: isQuotaError
+                        ? "⚠️ The chatbot is currently busy due to high traffic. Please wait a moment and try again!"
+                        : `Google Error: ${data.error.message}`
+                });
+            }
+
+            // Success — extract and return the bot reply
+            const reply = data.candidates[0].content.parts[0].text;
+            return res.status(200).json({ reply });
+
+        } catch (error) {
+            // Network-level crash (not an API error)
+            if (attempt < MAX_RETRIES) {
+                console.warn(`[LPNHS Chat] Network error on attempt ${attempt}. Retrying...`);
+                await wait(RETRY_DELAY_MS);
+            } else {
+                console.error("Backend crash after all retries:", error);
+                return res.status(500).json({
+                    reply: "⚠️ Sorry, I'm having trouble connecting right now. Please try again in a moment!"
+                });
+            }
         }
-
-        // Extract and return the bot's reply text
-        const reply = data.candidates[0].content.parts[0].text;
-        res.status(200).json({ reply });
-
-    } catch (error) {
-        console.error("Backend crash:", error);
-        res.status(500).json({ reply: "Sorry, the backend code crashed. Check Vercel logs." });
     }
 }
