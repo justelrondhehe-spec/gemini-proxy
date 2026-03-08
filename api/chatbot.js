@@ -16,33 +16,39 @@ export default async function handler(req, res) {
     // =========================================================
     // 2. READ REQUEST BODY
     //
-    //    NEW: We now accept a 'history' array alongside 'message'.
-    //    The frontend must send:
+    //    Accepts the current message + full conversation history.
+    //    Frontend must send:
     //      {
     //        message: "the user's latest message",
     //        history: [
-    //          { role: "user",  text: "previous user message" },
-    //          { role: "model", text: "previous bot reply"    },
+    //          { role: "user",      text: "previous user message" },
+    //          { role: "assistant", text: "previous bot reply"    },
     //          ...
     //        ]
     //      }
-    //    If 'history' is missing (e.g. very first message), it
-    //    defaults to an empty array — fully backwards compatible.
+    //    NOTE: Groq uses "assistant" (not "model") for bot turns.
+    //    The frontend still sends role: "model" (Gemini convention)
+    //    so we remap it to "assistant" when building the messages.
     // =========================================================
     const { message, history = [] } = req.body;
 
     // =========================================================
     // 3. API KEY CHECK
+    //    Add your Groq API key to Vercel as GROQ_API_KEY.
+    //    Get your free key at: https://console.groq.com
     // =========================================================
-    const apiKey = (process.env.GEMINI_API_KEY || "").trim();
+    const apiKey = (process.env.GROQ_API_KEY || "").trim();
 
     if (!apiKey) {
-        return res.status(500).json({ reply: "Error: API Key is missing in Vercel." });
+        return res.status(500).json({ reply: "Error: GROQ_API_KEY is missing in Vercel environment variables." });
     }
 
     // =========================================================
     // 4. SYSTEM INSTRUCTION
     //    Contains all school knowledge and bot behavior rules.
+    //    This is passed as a "system" role message to Groq —
+    //    the cleanest way to give the bot its personality and
+    //    knowledge without polluting the conversation history.
     // =========================================================
     const systemInstruction =
         "You are a friendly, helpful, and proud AI assistant for Las Piñas National High School - Main. " +
@@ -88,7 +94,7 @@ export default async function handler(req, res) {
         "    - Male: White short-sleeved shirt with brown checkered trim, paired with matching plaid trousers.\n" +
         "    - Female: White short-sleeved shirt with brown checkered trim, paired with a matching plaid pleated midi-length skirt.\n" +
         "  * SENIOR HIGH SCHOOL (SHS):\n" +
-        "    Strands offered: STEM (Science, Technology, Engineering, and Mathematics), ABM (Accountancy, Business, and Management), and TVL (Technical-Vocational-Livelihood).\n" +
+        "    Strands offered: STEM, ABM, and TVL.\n" +
         "    - Male: Yellowish polo shirt and dark blue pants.\n" +
         "    - Female: Yellowish blouse and dark blue pants.\n" +
 
@@ -107,128 +113,113 @@ export default async function handler(req, res) {
         "Long live, long life, Las Piñas High!'\n\n" +
 
         "BEHAVIOR:\n" +
-        // --- Core rule: always answer proactively, never stall with questions ---
-        "- CRITICAL: Never respond with ONLY a clarifying question. Always provide a complete answer immediately based on all available context.\n" +
-        "- If the user asks about uniforms without specifying a program or gender, list ALL uniforms for ALL programs (Regular JHS, STEM JHS, SPFL-Korean JHS, SHS) for both male and female in one full response.\n" +
+        "- CRITICAL: Never respond with ONLY a clarifying question. Always provide a complete answer immediately.\n" +
+        "- If the user asks about uniforms without specifying a program or gender, list ALL uniforms for ALL programs for both male and female in one full response.\n" +
         "- If a program is given but not a gender, immediately give BOTH the male and female uniforms for that program.\n" +
         "- If a gender is given but not a program, immediately list that gender's uniform across ALL programs.\n" +
-        "- If both program and gender are given, provide that exact uniform.\n" +
-        // --- Conversation memory: use history to resolve short follow-up messages ---
         "- You are given the full conversation history. Always read ALL previous turns before responding. " +
-        "If the user's latest message is a short follow-up (e.g. 'STEM JHS', 'male', 'the male students', 'Regular JHS'), " +
-        "combine it with the chat history to give the full, complete answer right away. " +
+        "If the user's latest message is a short follow-up (e.g. 'STEM JHS', 'male', 'Regular JHS'), " +
+        "combine it with the chat history to give the full answer right away. " +
         "Do NOT ask for clarification again if context is already established in prior messages.\n" +
         "- Answer concisely and politely with emojis (📚, 🏫, ✨).\n" +
         "- If asked for contact details or the song, provide them accurately and proudly.\n" +
         "- If you don't know something, say you are still learning about LPNHS-Main.";
 
     // =========================================================
-    // 5. BUILD THE MULTI-TURN 'contents' ARRAY
+    // 5. BUILD THE MESSAGES ARRAY FOR GROQ
     //
-    //    The Gemini API expects this shape:
+    //    Groq uses the OpenAI chat format:
     //    [
-    //      { role: "user",  parts: [{ text: "..." }] },
-    //      { role: "model", parts: [{ text: "..." }] },
-    //      { role: "user",  parts: [{ text: "..." }] },  ← latest
+    //      { role: "system",    content: "<system instruction>" },
+    //      { role: "user",      content: "<user message>" },
+    //      { role: "assistant", content: "<bot reply>" },
+    //      { role: "user",      content: "<latest message>" },
     //    ]
     //
-    //    We attach the system instruction to the very first user
-    //    turn so the bot always has the full school knowledge,
-    //    regardless of how deep into a conversation we are.
+    //    The system instruction goes in its own dedicated
+    //    "system" message — much cleaner than Gemini's approach
+    //    of stuffing it into the first user turn.
     // =========================================================
-    const contents = [];
+    const messages = [
+        // System instruction always comes first
+        { role: "system", content: systemInstruction }
+    ];
 
-    history.forEach((turn, index) => {
-        contents.push({
-            role: turn.role,   // "user" or "model"
-            parts: [{
-                // Prepend system instruction only to the very first user turn
-                text: (index === 0 && turn.role === 'user')
-                    ? `${systemInstruction}\n\nUser: ${turn.text}`
-                    : turn.text
-            }]
+    // Map conversation history into Groq's format.
+    // Remap "model" (Gemini convention) → "assistant" (OpenAI/Groq convention).
+    history.forEach((turn) => {
+        messages.push({
+            role: turn.role === "model" ? "assistant" : turn.role,
+            content: turn.text
         });
     });
 
-    // Append the current (newest) user message
-    contents.push({
-        role: 'user',
-        parts: [{
-            // If this is the very first message (no history), attach system instruction here
-            text: contents.length === 0
-                ? `${systemInstruction}\n\nUser: ${message}`
-                : message
-        }]
-    });
+    // Append the current user message
+    messages.push({ role: "user", content: message });
 
     // =========================================================
-    // 6. CALL GEMINI API WITH RETRY LOGIC
+    // 6. CALL GROQ API WITH RETRY LOGIC
     //
-    //    If Google returns a 429 (quota exceeded) error, we
-    //    automatically wait and retry up to MAX_RETRIES times
-    //    before giving up and returning a friendly message.
-    //    This handles traffic spikes when multiple users hit
-    //    the chatbot at the same time.
+    //    Groq's free tier is generous but can still return 429s
+    //    during traffic spikes. We retry up to 3 times with a
+    //    5-second wait between attempts before giving up.
     // =========================================================
 
-    const MAX_RETRIES = 3;       // Maximum number of retry attempts
-    const RETRY_DELAY_MS = 5000; // Wait 5 seconds between each retry
+    const MAX_RETRIES = 3;       // Maximum retry attempts
+    const RETRY_DELAY_MS = 5000; // 5 seconds between retries
 
-    /**
-     * Pauses execution for the given number of milliseconds.
-     * Used between retry attempts.
-     * @param {number} ms
-     */
+    // Helper: pause for a given number of milliseconds
     const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-    /**
-     * Calls the Gemini API and returns the parsed JSON response.
-     * Does not handle quota errors itself — that's done in the
-     * retry loop below.
-     */
-    const callGemini = async () => {
-        const response = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
-            {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ contents })
-            }
-        );
+    // Helper: perform a single Groq API call and return parsed JSON
+    const callGroq = async () => {
+        const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                // Groq uses Bearer token authentication
+                "Authorization": `Bearer ${apiKey}`
+            },
+            body: JSON.stringify({
+                model: "llama-3.3-70b-versatile", // Best free Groq model — fast and highly capable
+                messages,
+                max_tokens: 1024,
+                temperature: 0.7  // Slightly creative but still accurate
+            })
+        });
         return response.json();
     };
 
-    // Retry loop — attempts the API call up to MAX_RETRIES times
+    // Retry loop
     for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
         try {
-            const data = await callGemini();
+            const data = await callGroq();
 
-            // Check if Google returned an API-level error (e.g. quota, bad key)
+            // Check for API-level errors (e.g. rate limit, bad key)
             if (data.error) {
-                const isQuotaError = data.error.status === 'RESOURCE_EXHAUSTED';
+                const isRateLimit = data.error.type === "rate_limit_exceeded" ||
+                                    (data.error.code && data.error.code === 429);
 
-                if (isQuotaError && attempt < MAX_RETRIES) {
-                    // Quota hit — log it, wait, then try again
-                    console.warn(`[LPNHS Chat] Quota exceeded. Retry ${attempt}/${MAX_RETRIES} in ${RETRY_DELAY_MS}ms...`);
+                if (isRateLimit && attempt < MAX_RETRIES) {
+                    console.warn(`[LPNHS Chat] Groq rate limit hit. Retry ${attempt}/${MAX_RETRIES} in ${RETRY_DELAY_MS}ms...`);
                     await wait(RETRY_DELAY_MS);
-                    continue; // Jump to next iteration of the retry loop
+                    continue;
                 }
 
-                // Either not a quota error, or we've exhausted all retries
-                console.error("Google API error:", data.error.message);
+                console.error("Groq API error:", data.error.message);
                 return res.status(500).json({
-                    reply: isQuotaError
+                    reply: isRateLimit
                         ? "⚠️ The chatbot is currently busy due to high traffic. Please wait a moment and try again!"
-                        : `Google Error: ${data.error.message}`
+                        : `API Error: ${data.error.message}`
                 });
             }
 
-            // Success — extract and return the bot reply
-            const reply = data.candidates[0].content.parts[0].text;
+            // Success — extract the assistant's reply from Groq's response shape
+            const reply = data.choices[0].message.content;
             return res.status(200).json({ reply });
 
         } catch (error) {
-            // Network-level crash (not an API error)
+            // Network-level crash
             if (attempt < MAX_RETRIES) {
                 console.warn(`[LPNHS Chat] Network error on attempt ${attempt}. Retrying...`);
                 await wait(RETRY_DELAY_MS);
