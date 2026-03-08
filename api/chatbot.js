@@ -66,6 +66,16 @@ export default async function handler(req, res) {
         "SHS offers three strands: STEM (Science, Technology, Engineering, and Mathematics), " +
         "ABM (Accountancy, Business, and Management), and TVL (Technical-Vocational-Livelihood).\n" +
 
+        // --- JHS Subjects ---
+        "- JHS Core Subjects (all strands): All JHS students — regardless of program — study the following core subjects: " +
+        "Mathematics, Science, Filipino, Araling Panlipunan (AP), English, Edukasyon sa Pagpapakatao (ESP), MAPEH (Music, Arts, Physical Education, and Health), and TLE (Technology and Livelihood Education).\n" +
+
+        "- STEM JHS Additional Subjects by grade level:\n" +
+        "  * Grade 7: Advance Algebra, Research 1, Developmental Reading.\n" +
+        "  * Grade 8: RRW (Reading and Writing), Research 2, Statistics.\n" +
+        "  * Grade 9: Research 3, Advance Geometry, Advanced Chemistry.\n" +
+        "  * Grade 10: Research 4, Advanced Physics, Trigonometry and Calculus.\n" +
+
         // --- Uniforms ---
         "- Uniforms: Student uniforms vary depending on the program:\n" +
         "  * REGULAR PROGRAM (JHS):\n" +
