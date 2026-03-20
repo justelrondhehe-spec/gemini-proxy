@@ -30,7 +30,7 @@ export default async function handler(req, res) {
     //    The frontend still sends role: "model" (Gemini convention)
     //    so we remap it to "assistant" when building the messages.
     // =========================================================
-    const { message, history = [] } = req.body;
+    const { message, history = [], lang = 'en' } = req.body;
 
     // =========================================================
     // 3. API KEY CHECK
@@ -187,7 +187,10 @@ export default async function handler(req, res) {
         "- Show excitement and pride when talking about the school, its programs, and its students.\n" +
         "- If a student seems confused or is asking for help, be extra patient and encouraging.\n" +
         "- If asked for contact details or the alma mater song, provide them accurately and proudly.\n" +
-        "- If you don't know something, say warmly that you are still learning about LPNHS-Main and encourage them to contact the school directly.";
+        "- If you don't know something, say warmly that you are still learning about LPNHS-Main and encourage them to contact the school directly.\n" +
+        (lang === 'fil'
+          ? "- LANGUAGE: Always respond in Filipino/Tagalog. Use natural, conversational Filipino — not overly formal. Mix in some English only for technical terms that are commonly used in Filipino (like 'enrollment', 'requirements', 'STEM'). Never respond in pure English when lang is Filipino."
+          : "- LANGUAGE: Always respond in English.");
 
     // =========================================================
     // 5. BUILD THE MESSAGES ARRAY FOR GROQ
