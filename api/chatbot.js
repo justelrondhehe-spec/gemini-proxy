@@ -116,6 +116,62 @@ export default async function handler(req, res) {
         "We'll labor with faith and nobly, In dedication to her. " +
         "Long live, long life, Las Piñas High!'\n\n" +
 
+        // --- JHS Enrollment SY 2025-2026 ---
+        "- JHS ENROLLMENT SY 2025-2026:\n" +
+        "  STEP 1 - ONLINE ENROLLMENT (Pagsagot ng EBEEF):\n" +
+        "  * Fill out the Online Basic Education Enrollment Form (BEEF) using the links or QR codes.\n" +
+        "  * Grade 7: https://tinyurl.com/LPNHSG7SY2526\n" +
+        "  * Grade 8: https://tinyurl.com/LPNHSG8SY2526\n" +
+        "  * Grade 9: https://tinyurl.com/LPNHSG9SY2526\n" +
+        "  * Grade 10: https://tinyurl.com/LPNHSG10SY2526\n" +
+        "  * ALS: https://tinyurl.com/LAPNHSALSSY2526\n" +
+        "  * Attach photo of Report Card (back-to-back). Answer EBEEF on June 2-6, 2025. Screenshot your completed EBEEF as proof.\n" +
+
+        "  STEP 2 - SECTION ASSIGNMENT (Pagpapaskil ng Seksyon):\n" +
+        "  * Regular Grade 8-10 who completed EBEEF: Go to school on June 7, 2025 to find your section, classroom, and adviser.\n" +
+        "  * Return June 9-13, 2025 for Brigada Eskwela and Parent Orientation.\n" +
+        "  * Cannot find your section? Go to Guidance Services Office on June 9-11, 2025 from 2:00-3:00 PM.\n" +
+
+        "  STEP 3 - IN-PERSON ENROLLMENT (Pagpapasa ng Requirements):\n" +
+        "  * For: Incoming Grade 7 Regular/STEM/SPFL, Grade 7-10 Irregular, Transferees, Moved-In, OHS, ALS students.\n" +
+        "  * School hours: 8:00 AM - 2:00 PM on assigned dates:\n" +
+        "    - Incoming Grade 7 Regular/Irregular/STEM/SPFL/OHS: June 9-11\n" +
+        "    - Grade 10 Irregular/Moved-In: June 9\n" +
+        "    - Grade 9 Irregular/Moved-In: June 10\n" +
+        "    - Grade 8 Irregular/Moved-In: June 11\n" +
+        "  * Incoming Grade 7 students will have an English reading assessment.\n" +
+        "  * Requirements to bring:\n" +
+        "    - Original Report Card\n" +
+        "    - Photocopy of Birth Certificate\n" +
+        "    - 2 pcs 1x1 ID Picture\n" +
+        "    - Long Brown Envelope\n" +
+        "    - Good Moral Certificate (transferees from private school only)\n" +
+        "  * An enrollment slip will be given after checking requirements. Pass to adviser by June 13, 2025.\n" +
+
+        "  STEP 4 - ORIENTATION AND BRIGADA ESKWELA:\n" +
+        "  * Attend on June 9-13, 2025 on your assigned day per grade level.\n" +
+        "  * Brigada Eskwela: 8:00 AM - 12:00 PM | Parent Orientation: 1:00 PM - 3:00 PM\n" +
+        "    - Grade 10: June 9 | Grade 9: June 10 | Grade 8: June 11 | Grade 7: June 13\n" +
+
+        "  STEP 5 - SOFT OPENING (Opisyal na Pagpapatala):\n" +
+        "  * Go to school June 13, 2025 wearing white shirt with pants.\n" +
+        "  * Grade 7 and 10: 10:00 AM - 12:00 PM | Grade 8 and 9: 1:00 PM - 3:00 PM\n" +
+        "  * On Soft-Opening day: Bring requirements, find your classroom, show EBEEF screenshot, submit enrollment slip to adviser, get confirmation slip, attend Student General Orientation, and receive books/materials.\n\n" +
+
+        // --- SHS Enrollment SY 2025-2026 ---
+        "- SHS ENROLLMENT SY 2025-2026:\n" +
+        "  * Enrollment period: May 19 - June 13, 2025.\n" +
+        "  * Requirements to bring:\n" +
+        "    1. Original SF 9 (Report Card)\n" +
+        "    2. Photocopy of NSO Birth Certificate\n" +
+        "    3. Photocopy of Completion Certificate\n" +
+        "    4. 1x1 Recent Photo (2 pcs.)\n" +
+        "    5. Long Plastic Envelope\n" +
+        "  * SHS Enrollment Focal Persons:\n" +
+        "    - Mrs. Michelle A. Haresco: 09261627151\n" +
+        "    - Mrs. Melissa P. Conmigo: 09771056361\n" +
+        "  * Facebook Page: https://www.facebook.com/LPNHSSHMAIN\n\n" +
+
         "BEHAVIOR:\n" +
         "- CRITICAL: Never respond with ONLY a clarifying question. Always provide a complete answer immediately.\n" +
         "- If the user asks about uniforms without specifying a program or gender, list ALL uniforms for ALL programs for both male and female in one full response.\n" +
